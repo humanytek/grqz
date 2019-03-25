@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="shipping_label_report_document">
+        <t t-set="docs" t-value="docs.with_context({'lang':user.partner_id.lang})"/>
+        <t t-foreach="docs" t-as="o">
+            <t t-call="web.basic_layout">
+                <t t-foreach="o.box" t-as="box">
+                    <div class="page">
+                        <div class="row mt32 mb32" style="padding-bottom:5px;">
+                            <div class="col-md-12 mt32 mb32" style="padding-left: 15px;">
+                                <table class="table table-condensed">
+                                    <thead>
+                                        <tr>
+                                            <td class="text-center"
+                                                style="font-size:12px; background-color: #DDDDDD;border: 1px solid #ddd;border-collapse: collapse;padding: 1px;">
+                                                <span>Destination</span>
+                                            </td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="text-center" style="font-size:18px">
+                                                <strong><span t-esc="o.partner_id.state_id.name"/></strong>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <table class="table table-condensed">
+                                    <t t-set="report_partner" t-value="env.ref('requiez.report_partner')"/>
+                                    <tr>
+                                        <td class="text-center"
+                                            style="font-size: 13px;background-color: #DDDDDD; border: 1px solid #ddd;" colspan="2">
+                                            <span t-esc="o.company_id.name"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-center" style="font-size: 9px;border: 1px solid #ddd;" colspan="2">
+                                            <span t-esc="report_partner.street"/>,
+                                            <span t-esc="report_partner.street2"/>,
+                                            <span t-esc="report_partner.city"/>,
+                                            <span t-esc="report_partner.state_id.name"/>,
+                                            <span t-esc="report_partner.zip"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="font-size: 10px;border: 1px solid #ddd;">
+                                            <span>Recipient</span>
+                                        </td>
+                                        <td style="font-size: 13px; border: 1px solid #ddd;">
+                                            <strong><span t-esc="o.partner_id.parent_id.name if o.partner_id.parent_id else o.partner_id.name"/></strong>
+                                        </td>
+                                    </tr>
+                                </table>
+                                <table class="table table-condensed">
+                                    <thead>
+                                        <tr>
+                                            <td class="text-center"
+                                                style="font-size:9px; background-color: #DDDDDD;border: 1px solid #ddd;border-collapse: collapse;" colspan="2">
+                                                <span>Delivery Address</span>
+                                            </td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="text-left" style="font-size:11px;border-right: 1px solid #ddd;border-left: 1px solid #ddd;border-bottom: 1px solid #ddd;border-collapse: collapse;" colspan="2">
+                                                <span t-if="o.partner_id.street" t-esc="o.partner_id.street"/>
+                                                <span t-if="o.partner_id.street2" t-esc="o.partner_id.street2"/>
+                                                <span t-if="o.partner_id.city" t-esc="o.partner_id.city"/>
+                                                <span t-if="o.partner_id.state_id" t-esc="o.partner_id.state_id.name"/>
+                                                <span t-if="o.partner_id.country_id" t-esc="o.partner_id.country_id.name"/>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-center" style="font-size:9px;border-right: 1px solid #ddd;border-left: 1px solid #ddd;border-bottom: 1px solid #ddd;border-collapse: collapse;">
+                                                <span>INVOICE NO.</span>
+                                            </td>
+                                            <td class="text-center" style="font-size:15px;border-right: 1px solid #ddd;border-bottom: 1px solid #ddd;border-collapse: collapse;">
+                                                <span t-esc="o.sale_id.invoice_ids[0].move_name if o.sale_id.invoice_ids else ''"/>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-center" style="font-size:9px;border-left: 1px solid #ddd;border-bottom: 1px solid #ddd;border-right: 1px solid #ddd;border-collapse: collapse;">
+                                                <span>BOX NUMBER</span>
+                                                <strong><br><span style="font-size: 19px;" t-esc="box+1"/></br></strong>
+                                            </td>
+                                            <td class="text-center" style="font-size:9px;border-left: 1px solid #ddd;border-bottom: 1px solid #ddd;border-right: 1px solid #ddd;border-collapse: collapse;">
+                                                <span>TOTAL OF BOX IN GUIA</span>
+                                                <strong><br><span style="font-size: 19px;" t-field="o.box"/></br></strong>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+    <template id="print_shipping_label_report">
+        <t t-call="web.html_container">
+            <t t-call="requiez.shipping_label_report_document" t-lang="user.partner_id.lang"/>
+        </t>
+    </template>
+</odoo>

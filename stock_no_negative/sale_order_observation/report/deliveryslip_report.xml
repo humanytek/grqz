@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_delivery_document_observation" inherit_id="stock.report_delivery_document">
+        <xpath expr="//table[2]/thead/tr" position="inside">
+            <th>Observation</th>
+        </xpath>
+        <xpath expr="//table[2]/tbody/tr" position="inside">
+            <td><span t-field="move.sale_line_observation"/></td>
+        </xpath>
+        <xpath expr="//table[3]/thead/tr" position="inside">
+            <th>Observation</th>
+        </xpath>
+        <xpath expr="//table[3]/tbody/tr" position="inside">
+            <td><span t-field="move_line.move_id.sale_line_observation"></span></td>
+        </xpath>
+    </template>
+</odoo>
