@@ -31,7 +31,7 @@ class SaleOrder(models.Model):
         payment_term_credits = (
             [payment
              for payment in (self.env['account.payment.term'].search([]))
-             if payment.line_ids[0] and payment.line_ids[0].days > 0])
+             if payment.line_ids[-1] and payment.line_ids[-1].days > 0])
         for order in self.filtered(lambda r: r.payment_term_id
                                    in payment_term_credits):
             if (not order.partner_id.expired_ignore
