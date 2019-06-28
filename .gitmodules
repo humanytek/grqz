@@ -1,0 +1,4 @@
+[submodule "product_classification"]
+	path = product_classification
+	url = git@github.com:GustavoRequiez/product_classification.git
+	branch = master
