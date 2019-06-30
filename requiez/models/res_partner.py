@@ -38,6 +38,7 @@ class ResPartner(models.Model):
                     .search([
                         ('partner_id', '=', self.id),
                         ('state', '=', 'open'),
+                        ('type', '=', 'out_invoice'),
                         ('payment_term_id', 'in', payment_term_credits_ids)]))
         if not self.expired_ignore:
             self.credit_expired = False
