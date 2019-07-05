@@ -19808,6 +19808,16 @@ msgstr "BIENES"
 msgid "AT THE MOMENT, IT'S NOT AUTHORIZE A CREDIT SALE. THE CLIENT HAS EXPIRED BALANCE ON PREVIOUS INVOICES!. FOR MORE INFORMATION CHECK INVOICING!"
 msgstr "¡POR EL MOMENTO NO SE PERMITE VENDER A CRÉDITO. EL CLIENTE TIENE SALDO VENCIDO EN FACTURAS ANTERIORES. PARA MAYOR INFORMACIÓN CONSULTAR EN CONTABILIDAD!\""
 
+#. module: requiez
+#: model:ir.ui.view,arch_db:requiez.shipping_label_report_document
+msgid "<span>CLIENT REF</span>"
+msgstr "<span>OC CLIENTE</span>"
+
+#. module: requiez
+#: model:ir.ui.view,arch_db:requiez.shipping_label_report_document
+msgid "<span>SALE ORDER</span>"
+msgstr "<span>NO. ORDEN</span>"
+
 #. module: base
 #: model:ir.model.fields,field_description:base.field_res_partner_title_shortcut
 msgid "Abbreviation"
