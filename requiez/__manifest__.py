@@ -92,6 +92,7 @@
         "security/responsible_confirm_order_security.xml",
         "security/invoice_prioritize_security.xml",
         "security/archive_product_security.xml",
+        "security/account_control_security.xml",
         # Data
         "data/res_company_data.xml",
         "data/report_data.xml",
