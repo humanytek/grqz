@@ -188,6 +188,16 @@ msgid "Shipping Order"
 msgstr "Orden de Embarque"
 
 #. module: requiez
+#: model:ir.ui.view,arch_db:requiez.shipping_label_report_document
+msgid "<span>SALE ORDER</span>"
+msgstr "<span>NO. ORDEN</span>"
+
+#. module: requiez
+#: model:ir.ui.view,arch_db:requiez.shipping_label_report_document
+msgid "<span>CLIENT REF</span>"
+msgstr "<span>OC CLIENTE</span>"
+
+#. module: requiez
 #: model:ir.model.fields,field_description:requiez.field_stock_picking_box
 msgid "Boxes"
 msgstr "Caja(s)"
