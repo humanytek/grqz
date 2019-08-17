@@ -7,3 +7,8 @@
 	path = delivery_slip_rqz
 	url = git@github.com:GustavoRequiez/delivery_slip_rqz.git
 	branch = master
+
+[submodule "remove_attachemnts_invoice"]
+	path = remove_attachemnts_invoice
+	url = git@github.com:GustavoRequiez/remove_attachemnts_invoice.git
+	branch = master
