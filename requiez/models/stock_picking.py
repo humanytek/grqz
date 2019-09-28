@@ -13,6 +13,21 @@ class StockPicking(models.Model):
 
     box = fields.Integer('Boxes', default=1, help="Boxes number.")
 
+    stock_move_ids = fields.One2many(
+        'stock.move', 'picking_id', 'Stock Moves')
+
+    account_moves = fields.One2many('account.move', 'stock_move_id',
+                                    'Jornal Entry', compute='_compute_get_account_moves')
+
+    @api.multi
+    def _compute_get_account_moves(self):
+        account_move_ids = []
+        for move in self.stock_move_ids:
+            account_move_ids.append(move.id)
+        related_recordset = self.env["account.move"].search(
+            [('stock_move_id', 'in', account_move_ids)])
+        self.account_moves = related_recordset
+
     @api.multi
     def _add_delivery_cost_to_so(self):
         """Creates the delivery line within the sale order only when the
