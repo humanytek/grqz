@@ -25,7 +25,7 @@ class StockMoveLine(models.Model):
     def onchange_lot(self):
         res = {}
         location = self.location_id
-        if location.usage == 'supplier':
+        if location.usage == 'supplier' or location.usage == 'inventory':
             return res
         if self.lot_id and self.qty_done > 0:
             quants = self.lot_id.quant_ids.filtered(
