@@ -12,3 +12,8 @@
 	path = remove_attachemnts_invoice
 	url = git@github.com:GustavoRequiez/remove_attachemnts_invoice.git
 	branch = master
+
+[submodule "incoming_products_kardex"]
+	path = incoming_products_kardex
+	url = git@github.com:GustavoRequiez/incoming_products_kardex.git
+	branch = master
