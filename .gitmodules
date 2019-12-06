@@ -22,3 +22,8 @@
 	path = revenue_history_projection
 	url = git@github.com:GustavoRequiez/revenue_history_projection.git
 	branch = master
+
+[submodule "measurement_processes_production"]
+	path = measurement_processes_production
+	url = git@github.com:GustavoRequiez/measurement_processes_production.git
+	branch = master
