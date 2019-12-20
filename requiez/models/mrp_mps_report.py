@@ -24,6 +24,7 @@ import datetime
 import babel.dates
 from dateutil import relativedelta
 from odoo import api, models, _, fields
+import pytz
 
 NUMBER_OF_COLS = 12
 
