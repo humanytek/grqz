@@ -33,67 +33,46 @@ class MrpMpsReport(models.TransientModel):
 
     @api.multi
     def get_data(self, product):
-        """Getting data considering the quantity available"""
-        # pylint: disable=C0103
-        StockMove = self.env['stock.move']
-        MrpMpsLocation = self.env['mrp.mps.location']
-        ProductCompromise = self.env['product.compromise']
-        StockWarehouseOrderpoint = self.env['stock.warehouse.orderpoint']
         result = []
         forecasted = product.mps_forecasted
         date = datetime.datetime.now()
+        local_tz = pytz.timezone(self.env.context.get('tz') or 'UTC')
         indirect = self.get_indirect(product)[product.id]
-        display = _('To Supply / Produce')
-        buy_type = self.env.ref('purchase.route_warehouse0_buy',
-                                raise_if_not_found=False)
-        mo_type = self.env.ref('mrp.route_warehouse0_manufacture',
-                               raise_if_not_found=False)
+        display = _('To Receive / To Supply / Produce')
+        buy_type = self.env.ref('purchase.route_warehouse0_buy', raise_if_not_found=False)
+        mo_type = self.env.ref('mrp.route_warehouse0_manufacture', raise_if_not_found=False)
         lead_time = 0
-        routes = product.route_ids.ids
-        if buy_type.id in routes:
-            lead_time = (
-                product.seller_ids and
-                product.seller_ids[0].delay or
-                0) + self.env.user.company_id.po_lead
-        lead_time = (
-            product.produce_delay +
-            self.env.user.company_id.manufacturing_lead
-        ) if mo_type and mo_type.id in routes else lead_time
+        if buy_type and buy_type.id in product.route_ids.ids:
+            lead_time = (product.seller_ids and product.seller_ids[0].delay or 0) + self.env.user.company_id.po_lead
+        if mo_type and mo_type.id in product.route_ids.ids:
+            lead_time = product.produce_delay + self.env.user.company_id.manufacturing_lead
         leadtime = date + relativedelta.relativedelta(days=int(lead_time))
         # Take first day of month or week
-        date_dict = {
-            'month': lambda d: datetime.datetime(d.year, d.month, 1),
-            'week': lambda d: d - relativedelta.relativedelta(days=d.weekday())
-        }
-        date = date_dict.get(self.period, lambda d: d)(date)
-        mrp_mps_locations = MrpMpsLocation.search([])
-        list_location = []
-        len_location = len(mrp_mps_locations)
-        cont = 1
-        for mrp_mps_location in mrp_mps_locations:
-            tuple_location = (
-                'location_id', 'child_of', mrp_mps_location.location_id.id)
-            if cont < len_location:
-                list_location.append('|')
-            list_location.append(tuple_location)
-            cont += 1
-        initial = product.qty_available
+        if self.period == 'month':
+            date = datetime.datetime(date.year, date.month, 1)
+        elif self.period == 'week':
+            date = date - relativedelta.relativedelta(days=date.weekday())
 
+        if date < datetime.datetime.today():
+            initial = product.with_context(to_date=date.strftime('%Y-%m-%d')).qty_available
+        else:
+            initial = product.qty_available
         # Compute others cells
-        for col in range(NUMBER_OF_COLS):
-            date_to = date + relativedelta.relativedelta(days=1)
-            name = babel.dates.format_date(
-                format="MMM d", date=date,
-                locale=self._context.get('lang') or 'en_US')
+        for p in range(NUMBER_OF_COLS):
             if self.period == 'month':
                 date_to = date + relativedelta.relativedelta(months=1)
                 name = date.strftime('%b')
-                name = babel.dates.format_date(
-                    format="MMM YY", date=date,
-                    locale=self._context.get('lang') or 'en_US')
+                name = babel.dates.format_date(format="MMM YY", date=date, locale=self._context.get('lang') or 'en_US')
             elif self.period == 'week':
                 date_to = date + relativedelta.relativedelta(days=7)
-                name = _('Week %s') % date.strftime('%W')
+                name = _('Week %s') % babel.dates.format_datetime(
+                    date, format="w",
+                    locale=self._context.get('lang') or 'en_US'
+                )
+            else:
+                date_to = date + relativedelta.relativedelta(days=1)
+                name = babel.dates.format_date(
+                    format="MMM d", date=date.replace(tzinfo=pytz.utc).astimezone(local_tz), locale=self._context.get('lang') or 'en_US')
             forecasts = self.env['sale.forecast'].search([
                 ('date', '>=', date.strftime('%Y-%m-%d')),
                 ('date', '<', date_to.strftime('%Y-%m-%d')),
@@ -102,114 +81,46 @@ class MrpMpsReport(models.TransientModel):
             state = 'draft'
             mode = 'auto'
             proc_dec = False
-            demand = 0.0
-            for fore in forecasts:
-                mode = 'manual' if fore.mode == 'manual' else mode
-                state = 'done' if fore.state == 'done' else 'draft'
-                demand += (fore.forecast_qty if fore.mode == 'auto' else 0)
-            proc_dec = state == 'done'
-            indirect_total = sum(
-                [qty for day, qty in indirect.items()
-                 if date.strftime('%Y-%m-%d') <= day <
-                 date_to.strftime('%Y-%m-%d')])
-            to_supply = (product.mps_forecasted - initial +
-                         demand + indirect_total)
+            for f in forecasts:
+                if f.mode == 'manual':
+                    mode = 'manual'
+                if f.state == 'done':
+                    state = 'done'
+                    proc_dec = True
+            demand = sum(forecasts.filtered(lambda x: x.mode == 'auto').mapped('forecast_qty'))
+            indirect_total = 0.0
+            for day, qty in indirect.items():
+                if (day >= date.strftime('%Y-%m-%d')) and (day < date_to.strftime('%Y-%m-%d')):
+                    indirect_total += qty
+            to_supply = product.mps_forecasted - initial + demand + indirect_total
             to_supply = max(to_supply, product.mps_min_supply)
-            to_supply = min(
-                product.mps_max_supply, to_supply
-            ) if product.mps_max_supply > 0 else to_supply
+            if product.mps_max_supply > 0:
+                to_supply = min(product.mps_max_supply, to_supply)
 
-            qty_in = 0
-            product_in = 0
-            compromise_qty = 0
-            point = 0
-            calc = 0
-            product_out = 0
-            compromise_out_qty = 0
-            if buy_type.id in routes:
-                mrp_mps_locations = MrpMpsLocation.search([])
-                len_location = len(mrp_mps_locations)
-                domain = [
-                    ('date_expected', '>=', date.strftime('%Y-%m-%d')),
-                    ('date_expected', '<', date_to.strftime('%Y-%m-%d')),
-                    ('picking_type_id.code', '=', 'incoming'),
-                    ('state', 'not in', ['cancel', 'done']),
-                    ('product_id.id', '=', product.id)]
-
-                stock_moves = StockMove.search(domain)
-                for move in stock_moves:
-                    product_in += move.product_uom_qty
-                    product_compromise = ProductCompromise.search(
-                        [('stock_move_in_id.id', '=', move.id),
-                         ('state', '=', 'assigned')])
-                    for compromise in product_compromise:
-                        compromise_qty += compromise.qty_compromise
-
-                domain2 = [
-                    ('raw_material_production_id.sale_id.date_promised',
-                     '>=', date.strftime('%Y-%m-%d')),
-                    ('raw_material_production_id.sale_id.date_promised',
-                     '<', date_to.strftime('%Y-%m-%d')),
-                    ('state', 'not in', ['cancel', 'done']),
-                    ('product_id.id', '=', product.id)]
-                stock_move_outs = StockMove.search(domain2)
-                for move_out in stock_move_outs:
-                    product_out += move_out.product_uom_qty
-                    product_out_compromise = ProductCompromise.search(
-                        [('stock_move_out_id.id', '=', move_out.id),
-                         ('state', '=', 'assigned')])
-                    compromise_out_qty += sum(
-                        [c.qty_compromise for c in product_out_compromise])
-
-                if self.period == 'day' or self.period == 'week' and col == 0:
-                    date_old = datetime.datetime(date.year, date.month, 1)
-                    domain3 = [
-                        ('raw_material_production_id.sale_id.date_promised',
-                         '>=', date_old.strftime('%Y-%m-%d')),
-                        ('raw_material_production_id.sale_id.date_promised',
-                         '<', date.strftime('%Y-%m-%d')),
-                        ('state', 'not in', ['cancel', 'done']),
-                        ('product_id.id', '=', product.id)]
-                    stock_move_outs = StockMove.search(domain3)
-                    for move_out in stock_move_outs:
-                        product_out += move_out.product_uom_qty
-                        product_out_compromise = ProductCompromise.search(
-                            [('stock_move_out_id.id', '=', move_out.id)])
-                        compromise_out_qty += sum(
-                            [c.qty_compromise for c in product_out_compromise])
-            prod_in = 0
-
-            product_in_forecasted = qty_in if qty_in > 0 else 0
-            prod_in = qty_in > 0
-            stock_warehouse = StockWarehouseOrderpoint.search(
-                [('product_id.id', '=', product.id)])
-            point = stock_warehouse.product_min_qty
-
-            fore = (initial - point) if product_in_forecasted > 0 else 0
-            product_in_forecasted = 0 if fore >= 0 else abs(fore)
-
-            product_out -= compromise_out_qty
-            forecasted = (product_in_forecasted - demand + initial -
-                          product_out + product_in - compromise_qty)
-
-            calc = forecasted - point
-            calc = abs(calc) if calc < 0 else 0
-
-            to_supply = sum(
-                forecasts.filtered(
-                    lambda x: x.mode == 'manual').
-                mapped('to_supply')) if mode == 'manual' else calc
-
+            # Need to compute auto and manual separately as forecasts are still important
+            if mode == 'manual':
+                to_supply = sum(forecasts.filtered(lambda x: x.mode == 'manual').mapped('to_supply'))
+            if proc_dec:
+                wh = self.env['stock.warehouse'].search([], limit=1)
+                loc = wh.lot_stock_id
+                purchase_lines = self.env['purchase.order.line'].search([('order_id.picking_type_id.default_location_dest_id', 'child_of', loc.id),
+                                                                         ('product_id', '=', product.id),
+                                                                         ('state', 'in', ('draft', 'sent', 'to approve')),
+                                                                         ('date_planned', '>=', date.strftime('%Y-%m-%d')),
+                                                                         ('date_planned', '<', date_to.strftime('%Y-%m-%d'))])
+                move_lines = self.env['stock.move'].search([('location_dest_id', 'child_of', loc.id),
+                                                            ('product_id', '=', product.id),
+                                                            ('state', 'not in', ['done', 'cancel', 'draft']),
+                                                            ('location_id.usage', '!=', 'internal'),
+                                                            ('date_expected', '>=', date.strftime('%Y-%m-%d')),
+                                                            ('date_expected', '<', date_to.strftime('%Y-%m-%d'))])
+                to_supply = sum([x.product_uom._compute_quantity(x.product_qty, x.product_id.uom_id) for x in purchase_lines]) + sum([x.product_qty for x in move_lines])
+            forecasted = to_supply - demand + initial - indirect_total
             result.append({
                 'period': name,
                 'date': date.strftime('%Y-%m-%d'),
                 'date_to': date_to.strftime('%Y-%m-%d'),
                 'initial': initial,
-                'product_in': product_in,
-                'product_out': product_out,
-                'compromise_qty': compromise_qty,
-                'product_in_forecasted': product_in_forecasted,
-                'in': prod_in,
                 'demand': demand,
                 'mode': mode,
                 'state': state,
@@ -217,7 +128,7 @@ class MrpMpsReport(models.TransientModel):
                 'to_supply': to_supply,
                 'forecasted': forecasted,
                 'route_type': display,
-                'procurement_enable': not proc_dec and leadtime >= date,
+                'procurement_enable': True if not proc_dec and leadtime >= date else False,
                 'procurement_done': proc_dec,
                 'lead_time': leadtime.strftime('%Y-%m-%d'),
             })
