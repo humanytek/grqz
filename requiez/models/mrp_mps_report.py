@@ -44,21 +44,13 @@ class MrpMpsReport(models.TransientModel):
         date = datetime.datetime.now()
         indirect = self.get_indirect(product)[product.id]
         display = _('To Supply / Produce')
-        buy_type = self.env.ref('purchase.route_warehouse0_buy',
-                                raise_if_not_found=False)
-        mo_type = self.env.ref('mrp.route_warehouse0_manufacture',
-                               raise_if_not_found=False)
+        buy_type = self.env.ref('purchase.route_warehouse0_buy', raise_if_not_found=False)
+        mo_type = self.env.ref('mrp.route_warehouse0_manufacture', raise_if_not_found=False)
         lead_time = 0
         routes = product.route_ids.ids
         if buy_type.id in routes:
-            lead_time = (
-                product.seller_ids and
-                product.seller_ids[0].delay or
-                0) + self.env.user.company_id.po_lead
-        lead_time = (
-            product.produce_delay +
-            self.env.user.company_id.manufacturing_lead
-        ) if mo_type and mo_type.id in routes else lead_time
+            lead_time = (product.seller_ids and product.seller_ids[0].delay or 0) + self.env.user.company_id.po_lead
+        lead_time = (product.produce_delay + self.env.user.company_id.manufacturing_lead) if mo_type and mo_type.id in routes else lead_time
         leadtime = date + relativedelta.relativedelta(days=int(lead_time))
         # Take first day of month or week
         date_dict = {
@@ -71,8 +63,7 @@ class MrpMpsReport(models.TransientModel):
         len_location = len(mrp_mps_locations)
         cont = 1
         for mrp_mps_location in mrp_mps_locations:
-            tuple_location = (
-                'location_id', 'child_of', mrp_mps_location.location_id.id)
+            tuple_location = ('location_id', 'child_of', mrp_mps_location.location_id.id)
             if cont < len_location:
                 list_location.append('|')
             list_location.append(tuple_location)
@@ -82,15 +73,11 @@ class MrpMpsReport(models.TransientModel):
         # Compute others cells
         for col in range(NUMBER_OF_COLS):
             date_to = date + relativedelta.relativedelta(days=1)
-            name = babel.dates.format_date(
-                format="MMM d", date=date,
-                locale=self._context.get('lang') or 'en_US')
+            name = babel.dates.format_date(format="MMM d", date=date, locale=self._context.get('lang') or 'en_US')
             if self.period == 'month':
                 date_to = date + relativedelta.relativedelta(months=1)
                 name = date.strftime('%b')
-                name = babel.dates.format_date(
-                    format="MMM YY", date=date,
-                    locale=self._context.get('lang') or 'en_US')
+                name = babel.dates.format_date(format="MMM YY", date=date, locale=self._context.get('lang') or 'en_US')
             elif self.period == 'week':
                 date_to = date + relativedelta.relativedelta(days=7)
                 name = _('Week %s') % date.strftime('%W')
@@ -108,16 +95,10 @@ class MrpMpsReport(models.TransientModel):
                 state = 'done' if fore.state == 'done' else 'draft'
                 demand += (fore.forecast_qty if fore.mode == 'auto' else 0)
             proc_dec = state == 'done'
-            indirect_total = sum(
-                [qty for day, qty in indirect.items()
-                 if date.strftime('%Y-%m-%d') <= day <
-                 date_to.strftime('%Y-%m-%d')])
-            to_supply = (product.mps_forecasted - initial +
-                         demand + indirect_total)
+            indirect_total = sum([qty for day, qty in indirect.items() if date.strftime('%Y-%m-%d') <= day < date_to.strftime('%Y-%m-%d')])
+            to_supply = (product.mps_forecasted - initial + demand + indirect_total)
             to_supply = max(to_supply, product.mps_min_supply)
-            to_supply = min(
-                product.mps_max_supply, to_supply
-            ) if product.mps_max_supply > 0 else to_supply
+            to_supply = min(product.mps_max_supply, to_supply) if product.mps_max_supply > 0 else to_supply
 
             qty_in = 0
             product_in = 0
@@ -134,71 +115,67 @@ class MrpMpsReport(models.TransientModel):
                     ('date_expected', '<', date_to.strftime('%Y-%m-%d')),
                     ('picking_type_id.code', '=', 'incoming'),
                     ('state', 'not in', ['cancel', 'done']),
-                    ('product_id.id', '=', product.id)]
+                    ('product_id.id', '=', product.id),
+                ]
 
                 stock_moves = StockMove.search(domain)
                 for move in stock_moves:
                     product_in += move.product_uom_qty
-                    product_compromise = ProductCompromise.search(
-                        [('stock_move_in_id.id', '=', move.id),
-                         ('state', '=', 'assigned')])
+                    product_compromise = ProductCompromise.search([
+                        ('stock_move_in_id.id', '=', move.id),
+                        ('state', '=', 'assigned')
+                    ])
                     for compromise in product_compromise:
                         compromise_qty += compromise.qty_compromise
 
                 domain2 = [
-                    ('raw_material_production_id.sale_id.date_promised',
-                     '>=', date.strftime('%Y-%m-%d')),
-                    ('raw_material_production_id.sale_id.date_promised',
-                     '<', date_to.strftime('%Y-%m-%d')),
+                    ('raw_material_production_id.sale_id.date_promised', '>=', date.strftime('%Y-%m-%d')),
+                    ('raw_material_production_id.sale_id.date_promised', '<', date_to.strftime('%Y-%m-%d')),
                     ('state', 'not in', ['cancel', 'done']),
-                    ('product_id.id', '=', product.id)]
+                    ('product_id.id', '=', product.id),
+                ]
                 stock_move_outs = StockMove.search(domain2)
                 for move_out in stock_move_outs:
                     product_out += move_out.product_uom_qty
-                    product_out_compromise = ProductCompromise.search(
-                        [('stock_move_out_id.id', '=', move_out.id),
-                         ('state', '=', 'assigned')])
-                    compromise_out_qty += sum(
-                        [c.qty_compromise for c in product_out_compromise])
+                    product_out_compromise = ProductCompromise.search([
+                        ('stock_move_out_id.id', '=', move_out.id),
+                        ('state', '=', 'assigned'),
+                    ])
+                    compromise_out_qty += sum([c.qty_compromise for c in product_out_compromise])
 
                 if self.period == 'day' or self.period == 'week' and col == 0:
                     date_old = datetime.datetime(date.year, date.month, 1)
                     domain3 = [
-                        ('raw_material_production_id.sale_id.date_promised',
-                         '>=', date_old.strftime('%Y-%m-%d')),
-                        ('raw_material_production_id.sale_id.date_promised',
-                         '<', date.strftime('%Y-%m-%d')),
+                        ('raw_material_production_id.sale_id.date_promised', '>=', date_old.strftime('%Y-%m-%d')),
+                        ('raw_material_production_id.sale_id.date_promised', '<', date.strftime('%Y-%m-%d')),
                         ('state', 'not in', ['cancel', 'done']),
-                        ('product_id.id', '=', product.id)]
+                        ('product_id.id', '=', product.id)
+                    ]
                     stock_move_outs = StockMove.search(domain3)
                     for move_out in stock_move_outs:
                         product_out += move_out.product_uom_qty
-                        product_out_compromise = ProductCompromise.search(
-                            [('stock_move_out_id.id', '=', move_out.id)])
-                        compromise_out_qty += sum(
-                            [c.qty_compromise for c in product_out_compromise])
+                        product_out_compromise = ProductCompromise.search([('stock_move_out_id.id', '=', move_out.id)])
+                        compromise_out_qty += sum([c.qty_compromise for c in product_out_compromise])
             prod_in = 0
 
             product_in_forecasted = qty_in if qty_in > 0 else 0
             prod_in = qty_in > 0
             stock_warehouse = StockWarehouseOrderpoint.search(
-                [('product_id.id', '=', product.id)])
+                [('product_id.id', '=', product.id),
+                 ])
             point = stock_warehouse.product_min_qty
 
             fore = (initial - point) if product_in_forecasted > 0 else 0
             product_in_forecasted = 0 if fore >= 0 else abs(fore)
 
             product_out -= compromise_out_qty
-            forecasted = (product_in_forecasted - demand + initial -
-                          product_out + product_in - compromise_qty)
+            forecasted = (product_in_forecasted - demand + initial - product_out + product_in - compromise_qty)
 
             calc = forecasted - point
             calc = abs(calc) if calc < 0 else 0
 
             to_supply = sum(
-                forecasts.filtered(
-                    lambda x: x.mode == 'manual').
-                mapped('to_supply')) if mode == 'manual' else calc
+                forecasts.filtered(lambda x: x.mode == 'manual').mapped('to_supply')) if mode == 'manual' else calc
 
             result.append({
                 'period': name,
@@ -223,28 +200,6 @@ class MrpMpsReport(models.TransientModel):
             })
             initial = forecasted
             date = date_to
-        return result
-
-    @api.model
-    def get_html(self, domain=None):
-        domain = domain or []
-        res = self.search([], limit=1)
-        if not res:
-            res = self.create({})
-        domain.append(['mps_active', '=', True])
-        rcontext = {
-            'products': [
-                (x, res.get_data(x))
-                for x in self.env['product.product'].search(domain, limit=20)],
-            'nb_periods': NUMBER_OF_COLS,
-            'company': self.env.user.company_id,
-            'format_float': self.env['ir.qweb.field.float'].value_to_html,
-        }
-        result = {
-            'html': self.env.ref('mrp_mps.report_inventory').render(rcontext),
-            'report_context': {'nb_periods': NUMBER_OF_COLS,
-                               'period': res.period},
-        }
         return result
 
 
