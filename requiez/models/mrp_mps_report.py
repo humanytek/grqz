@@ -29,6 +29,9 @@ import pytz
 NUMBER_OF_COLS = 12
 
 
+_logger = logging.getLogger(__name__)
+
+
 class MrpMpsReport(models.TransientModel):
     _inherit = 'mrp.mps.report'
 
@@ -138,13 +141,14 @@ class MrpMpsReport(models.TransientModel):
                     ('product_id.id', '=', product.id)
                 ]
                 stock_move_outs = StockMove.search(domain2)
-                for move_out in stock_move_outs:
-                    product_out += move_out.product_uom_qty
-                    # product_out_compromise = ProductCompromise.search([
-                    #     ('stock_move_out_id.id', '=', move_out.id),
-                    #     ('state', '=', 'assigned'),
-                    # ])
-                    # compromise_out_qty += sum([c.qty_compromise for c in product_out_compromise])
+                _logger.warning(stock_move_outs)
+                # for move_out in stock_move_outs:
+                #     product_out += move_out.product_uom_qty
+                #     product_out_compromise = ProductCompromise.search([
+                #         ('stock_move_out_id.id', '=', move_out.id),
+                #         ('state', '=', 'assigned'),
+                #     ])
+                #     compromise_out_qty += sum([c.qty_compromise for c in product_out_compromise])
 
                 # if self.period == 'day' or self.period == 'week' and col == 0:
                 #     date_old = datetime.datetime(date.year, date.month, 1)
