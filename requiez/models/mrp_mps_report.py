@@ -113,9 +113,7 @@ class MrpMpsReport(models.TransientModel):
                 state = 'done' if fore.state == 'done' else 'draft'
                 demand += (fore.forecast_qty if fore.mode == 'auto' else 0)
             proc_dec = state == 'done'
-            indirect_total = sum([
-                qty for day, qty in indirect.items() if date.strftime('%Y-%m-%d') <= day < date_to.strftime('%Y-%m-%d')
-            ])
+            indirect_total = sum([qty for day, qty in indirect.items() if date.strftime('%Y-%m-%d') <= day < date_to.strftime('%Y-%m-%d')])
             to_supply = (product.mps_forecasted - initial + demand + indirect_total)
             to_supply = max(to_supply, product.mps_min_supply)
             to_supply = min(product.mps_max_supply, to_supply) if product.mps_max_supply > 0 else to_supply
@@ -128,7 +126,6 @@ class MrpMpsReport(models.TransientModel):
             product_out = 0
             compromise_out_qty = 0
             if buy_type.id in routes:
-                pass
                 mrp_mps_locations = MrpMpsLocation.search([])
                 len_location = len(mrp_mps_locations)
                 domain = [
