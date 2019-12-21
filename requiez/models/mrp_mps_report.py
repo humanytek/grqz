@@ -131,34 +131,34 @@ class MrpMpsReport(models.TransientModel):
                 #     for compromise in product_compromise:
                 #         compromise_qty += compromise.qty_compromise
 
-                # domain2 = [
-                #     ('raw_material_production_id.sale_id.date_promised', '>=', date.strftime('%Y-%m-%d')),
-                #     ('raw_material_production_id.sale_id.date_promised', '<', date_to.strftime('%Y-%m-%d')),
-                #     ('state', 'not in', ['cancel', 'done']),
-                #     ('product_id.id', '=', product.id)
-                # ]
-                # stock_move_outs = StockMove.search(domain2)
-                # for move_out in stock_move_outs:
-                #     product_out += move_out.product_uom_qty
-                #     product_out_compromise = ProductCompromise.search([
-                #         ('stock_move_out_id.id', '=', move_out.id),
-                #         ('state', '=', 'assigned'),
-                #     ])
-                #     compromise_out_qty += sum([c.qty_compromise for c in product_out_compromise])
+                domain2 = [
+                    ('raw_material_production_id.sale_id.date_promised', '>=', date.strftime('%Y-%m-%d')),
+                    ('raw_material_production_id.sale_id.date_promised', '<', date_to.strftime('%Y-%m-%d')),
+                    ('state', 'not in', ['cancel', 'done']),
+                    ('product_id.id', '=', product.id)
+                ]
+                stock_move_outs = StockMove.search(domain2)
+                for move_out in stock_move_outs:
+                    product_out += move_out.product_uom_qty
+                    # product_out_compromise = ProductCompromise.search([
+                    #     ('stock_move_out_id.id', '=', move_out.id),
+                    #     ('state', '=', 'assigned'),
+                    # ])
+                    # compromise_out_qty += sum([c.qty_compromise for c in product_out_compromise])
 
-                if self.period == 'day' or self.period == 'week' and col == 0:
-                    date_old = datetime.datetime(date.year, date.month, 1)
-                    domain3 = [
-                        ('raw_material_production_id.sale_id.date_promised', '>=', date_old.strftime('%Y-%m-%d')),
-                        ('raw_material_production_id.sale_id.date_promised', '<', date.strftime('%Y-%m-%d')),
-                        ('state', 'not in', ['cancel', 'done']),
-                        ('product_id.id', '=', product.id),
-                    ]
-                    stock_move_outs = StockMove.search(domain3)
-                    for move_out in stock_move_outs:
-                        product_out += move_out.product_uom_qty
-                        product_out_compromise = ProductCompromise.search([('stock_move_out_id.id', '=', move_out.id)])
-                        compromise_out_qty += sum([c.qty_compromise for c in product_out_compromise])
+                # if self.period == 'day' or self.period == 'week' and col == 0:
+                #     date_old = datetime.datetime(date.year, date.month, 1)
+                #     domain3 = [
+                #         ('raw_material_production_id.sale_id.date_promised', '>=', date_old.strftime('%Y-%m-%d')),
+                #         ('raw_material_production_id.sale_id.date_promised', '<', date.strftime('%Y-%m-%d')),
+                #         ('state', 'not in', ['cancel', 'done']),
+                #         ('product_id.id', '=', product.id),
+                #     ]
+                #     stock_move_outs = StockMove.search(domain3)
+                #     for move_out in stock_move_outs:
+                #         product_out += move_out.product_uom_qty
+                #         product_out_compromise = ProductCompromise.search([('stock_move_out_id.id', '=', move_out.id)])
+                #         compromise_out_qty += sum([c.qty_compromise for c in product_out_compromise])
             # prod_in = 0
 
             # product_in_forecasted = qty_in if qty_in > 0 else 0
