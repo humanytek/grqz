@@ -73,7 +73,7 @@
         "report/report_invoice.xml",
         "report/purchase_order_templates.xml",
         "report/purchase_quotation_templates.xml",
-        # "report/mrp_mps_report_templates.xml",
+        "report/mrp_mps_report_templates.xml",
     ],
     "demo": [
     ],
