@@ -23,15 +23,10 @@
 import datetime
 import babel.dates
 from dateutil import relativedelta
-import pytz
-import logging
 
 from odoo import api, models, _, fields
 
 NUMBER_OF_COLS = 12
-
-
-_logger = logging.getLogger(__name__)
 
 
 class MrpMpsReport(models.TransientModel):
@@ -77,6 +72,8 @@ class MrpMpsReport(models.TransientModel):
         initial = product.qty_available
 
         # Compute others cells
+
+        # Better perfomance
         date_to_full = date + relativedelta.relativedelta(days=1)
         if self.period == 'month':
             date_to_full = date + relativedelta.relativedelta(months=1 * NUMBER_OF_COLS)
@@ -89,6 +86,8 @@ class MrpMpsReport(models.TransientModel):
             ('product_id.id', '=', product.id)
         ]
         stock_move_outs_full = StockMove.search(domain2_full)
+        stock_warehouse = StockWarehouseOrderpoint.search([('product_id.id', '=', product.id)])
+        # END of Better performance
         for col in range(NUMBER_OF_COLS):
             date_to = date + relativedelta.relativedelta(days=1)
             name = babel.dates.format_date(format="MMM d", date=date, locale=self._context.get('lang') or 'en_US')
@@ -99,7 +98,7 @@ class MrpMpsReport(models.TransientModel):
             elif self.period == 'week':
                 date_to = date + relativedelta.relativedelta(days=7)
                 name = _('Week %s') % date.strftime('%W')
-            forecasts = self.env['sale.forecast'].search([
+            forecasts = self.env['sale.forecast'].search([  # TODO Check
                 ('date', '>=', date.strftime('%Y-%m-%d')),
                 ('date', '<', date_to.strftime('%Y-%m-%d')),
                 ('product_id', '=', product.id),
@@ -126,9 +125,7 @@ class MrpMpsReport(models.TransientModel):
             product_out = 0
             compromise_out_qty = 0
             if buy_type.id in routes:
-                mrp_mps_locations = MrpMpsLocation.search([])
-                len_location = len(mrp_mps_locations)
-                domain = [
+                domain = [  # TODO Check
                     ('date_expected', '>=', date.strftime('%Y-%m-%d')),
                     ('date_expected', '<', date_to.strftime('%Y-%m-%d')),
                     ('picking_type_id.code', '=', 'incoming'),
@@ -167,7 +164,7 @@ class MrpMpsReport(models.TransientModel):
 
                 if self.period == 'day' or self.period == 'week' and col == 0:
                     date_old = datetime.datetime(date.year, date.month, 1)
-                    domain3 = [
+                    domain3 = [  # TODO Check
                         ('raw_material_production_id.sale_id.date_promised', '>=', date_old.strftime('%Y-%m-%d')),
                         ('raw_material_production_id.sale_id.date_promised', '<', date.strftime('%Y-%m-%d')),
                         ('state', 'not in', ['cancel', 'done']),
@@ -182,7 +179,6 @@ class MrpMpsReport(models.TransientModel):
 
             product_in_forecasted = qty_in if qty_in > 0 else 0
             prod_in = qty_in > 0
-            stock_warehouse = StockWarehouseOrderpoint.search([('product_id.id', '=', product.id)])
             point = stock_warehouse.product_min_qty
 
             fore = (initial - point) if product_in_forecasted > 0 else 0
