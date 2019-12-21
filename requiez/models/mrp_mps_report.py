@@ -77,6 +77,21 @@ class MrpMpsReport(models.TransientModel):
         initial = product.qty_available
 
         # Compute others cells
+        date_to_full = date + relativedelta.relativedelta(days=1)
+        if self.period == 'month':
+            date_to_full = date + relativedelta.relativedelta(months=1 * NUMBER_OF_COLS)
+        elif self.period == 'week':
+            date_to_full = date + relativedelta.relativedelta(days=7 * NUMBER_OF_COLS)
+        domain2_full = [
+            ('raw_material_production_id.sale_id.date_promised', '>=', date.strftime('%Y-%m-%d')),
+            ('raw_material_production_id.sale_id.date_promised', '<', date_to_full.strftime('%Y-%m-%d')),
+            ('state', 'not in', ['cancel', 'done']),
+            ('product_id.id', '=', product.id)
+        ]
+        _logger.warning('FULL IN')
+        stock_move_outs_full = StockMove.search(domain2_full)
+        _logger.warning(stock_move_outs_full)
+        _logger.warning('FULL OUT')
         for col in range(NUMBER_OF_COLS):
             date_to = date + relativedelta.relativedelta(days=1)
             name = babel.dates.format_date(format="MMM d", date=date, locale=self._context.get('lang') or 'en_US')
@@ -136,14 +151,18 @@ class MrpMpsReport(models.TransientModel):
                 #     for compromise in product_compromise:
                 #         compromise_qty += compromise.qty_compromise
 
-                domain2 = [
-                    ('raw_material_production_id.sale_id.date_promised', '>=', date.strftime('%Y-%m-%d')),
-                    ('raw_material_production_id.sale_id.date_promised', '<', date_to.strftime('%Y-%m-%d')),
-                    ('state', 'not in', ['cancel', 'done']),
-                    ('product_id.id', '=', product.id)
-                ]
-                stock_move_outs = StockMove.search(domain2)
+                # domain2 = [
+                #     ('raw_material_production_id.sale_id.date_promised', '>=', date.strftime('%Y-%m-%d')),
+                #     ('raw_material_production_id.sale_id.date_promised', '<', date_to.strftime('%Y-%m-%d')),
+                #     ('state', 'not in', ['cancel', 'done']),
+                #     ('product_id.id', '=', product.id)
+                # ]
+                # stock_move_outs = StockMove.search(domain2)
+                _logger.waring('FILTERED IN')
+                date_to_str = date_to.strftime('%Y-%m-%d')
+                stock_move_outs = stock_move_outs_full.filtered(lambda r: r.raw_material_production_id.sale_id.date_promised < date_to_str)
                 _logger.warning(stock_move_outs)
+                _logger.waring('FILTERED OUT')
                 # for move_out in stock_move_outs:
                 #     product_out += move_out.product_uom_qty
                 #     product_out_compromise = ProductCompromise.search([
