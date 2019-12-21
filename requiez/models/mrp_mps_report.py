@@ -160,7 +160,10 @@ class MrpMpsReport(models.TransientModel):
                 # stock_move_outs = StockMove.search(domain2)
                 _logger.warning('FILTERED IN')
                 date_to_str = date_to.strftime('%Y-%m-%d')
-                stock_move_outs = stock_move_outs_full.filtered(lambda r: r.raw_material_production_id.sale_id.date_promised < date_to_str)
+                date_str = date.strftime('%Y-%m-%d')
+                stock_move_outs = stock_move_outs_full.filtered(lambda r: r.raw_material_production_id.sale_id.date_promised >= date_str
+                                                                and
+                                                                r.raw_material_production_id.sale_id.date_promised < date_to_str)
                 _logger.warning(stock_move_outs)
                 _logger.warning('FILTERED OUT')
                 # for move_out in stock_move_outs:
