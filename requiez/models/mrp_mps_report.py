@@ -111,24 +111,25 @@ class MrpMpsReport(models.TransientModel):
             product_out = 0
             compromise_out_qty = 0
             if buy_type.id in routes:
-                mrp_mps_locations = MrpMpsLocation.search([])
-                len_location = len(mrp_mps_locations)
-                domain = [
-                    ('date_expected', '>=', date.strftime('%Y-%m-%d')),
-                    ('date_expected', '<', date_to.strftime('%Y-%m-%d')),
-                    ('picking_type_id.code', '=', 'incoming'),
-                    ('state', 'not in', ['cancel', 'done']),
-                    ('product_id.id', '=', product.id),
-                ]
-                stock_moves = StockMove.search(domain)
-                for move in stock_moves:
-                    product_in += move.product_uom_qty
-                    product_compromise = ProductCompromise.search([
-                        ('stock_move_in_id.id', '=', move.id),
-                        ('state', '=', 'assigned'),
-                    ])
-                    for compromise in product_compromise:
-                        compromise_qty += compromise.qty_compromise
+                pass
+                # mrp_mps_locations = MrpMpsLocation.search([])
+                # len_location = len(mrp_mps_locations)
+                # domain = [
+                #     ('date_expected', '>=', date.strftime('%Y-%m-%d')),
+                #     ('date_expected', '<', date_to.strftime('%Y-%m-%d')),
+                #     ('picking_type_id.code', '=', 'incoming'),
+                #     ('state', 'not in', ['cancel', 'done']),
+                #     ('product_id.id', '=', product.id),
+                # ]
+                # stock_moves = StockMove.search(domain)
+                # for move in stock_moves:
+                #     product_in += move.product_uom_qty
+                #     product_compromise = ProductCompromise.search([
+                #         ('stock_move_in_id.id', '=', move.id),
+                #         ('state', '=', 'assigned'),
+                #     ])
+                #     for compromise in product_compromise:
+                #         compromise_qty += compromise.qty_compromise
 
                 # domain2 = [
                 #     ('raw_material_production_id.sale_id.date_promised', '>=', date.strftime('%Y-%m-%d')),
