@@ -27,3 +27,8 @@
 	path = measurement_processes_production
 	url = git@github.com:GustavoRequiez/measurement_processes_production.git
 	branch = master
+
+[submodule "GustavoRequiez/value_merchandise_sent"]
+	path = GustavoRequiez/value_merchandise_sent
+	url = git@github.com:GustavoRequiez/value_merchandise_sent.git
+	branch = 11.0
