@@ -33,3 +33,8 @@
 	url = git@github.com:GustavoRequiez/value_merchandise_sent.git
 	branch = 11.0
 
+
+[submodule "humanytek-team/onebeat_integration"]
+	path = humanytek-team/onebeat_integration
+	url = git@github.com:humanytek-team/onebeat_integration.git
+	branch = 12.0
