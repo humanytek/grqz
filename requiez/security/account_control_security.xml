@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<odoo>
-
-  <record model="res.groups" id="account_control_group">
-    <field name="name">Account Control</field>
-  </record>
-
-</odoo>
