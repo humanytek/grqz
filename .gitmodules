@@ -90,3 +90,8 @@
 	path = requiez
 	url = git@github.com:GrupoRequiez/requiez.git
 	branch = 12.0
+
+[submodule "web_notify"]
+	path = web_notify
+	url = git@github.com:GrupoRequiez/web_notify.git
+	branch = 12.0
