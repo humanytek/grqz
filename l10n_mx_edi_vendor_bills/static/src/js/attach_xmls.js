@@ -60,6 +60,9 @@ var attachXmlsWizard = FieldChar.extend({
                 });
             }else if(type === 'tryagain'){
                 this.sendErrorToServer(this.alerts_in_queue.alertHTML[filekey].xml64, filekey, 'check_xml');
+            } else if (type === 'forcesave') {
+                self.getParent().state.context = _.extend(self.getParent().state.context, {'force_save': true});
+                self.sendErrorToServer(self.alerts_in_queue.alertHTML[filekey].xml64, filekey, 'check_xml');
             }
         },
         'click #dndfooter button#save': function(e){
@@ -86,9 +89,8 @@ var attachXmlsWizard = FieldChar.extend({
             e.preventDefault();
             if(this.invoice_ids.length > 0){
                 var domain = [['id', 'in', this.invoice_ids]];
-                var name = this.getParent().state.context.l10n_mx_edi_invoice_type === 'out' ? _t('Customer Invoices'): _t('Supplier Invoices');
                 return this.do_action({
-                    name: name,
+                    name: _t('Supplier Invoices'),
                     view_type: 'list',
                     view_mode: 'list,form',
                     res_model: 'account.invoice',
@@ -96,7 +98,6 @@ var attachXmlsWizard = FieldChar.extend({
                     views: [[false, 'list'], [false, 'form']],
                     targe: 'current',
                     domain: domain,
-                    context: this.getParent().state.context,
                 });
             }
         },
@@ -255,8 +256,7 @@ var attachXmlsWizard = FieldChar.extend({
                 }
                 self.alerts_in_queue.total -= 1;
                 self.$el.find('#filescontent div[title="'+key+'"]').remove();
-                var message = self.getParent().state.context.l10n_mx_edi_invoice_type === 'out' ? _t('XML removed, the TipoDeComprobante is not I.'): _t('XML removed, the TipoDeComprobante is not I or E.');
-                self.do_warn(message);
+                self.do_warn(_t('XML removed, the TipoDeComprobante is not I or E.'));
             }else{
                 var alert_parts = self.prepareWrongAlert(key, file);
 
@@ -289,24 +289,25 @@ var attachXmlsWizard = FieldChar.extend({
         }else if(able_buttons.includes('supplier') && !able_buttons.includes('remove')){
             buttons += _t('<button class="dnd-alert-button" tag="remove">Remove XML</button>') +
                 _t('<button class="dnd-alert-button" tag="supplier">Create Supplier</button>');
-        }else if(able_buttons.includes('customer') && !able_buttons.includes('remove')){
-            buttons += _t('<button class="dnd-alert-button" tag="remove">Remove XML</button>') +
-                _t('<button class="dnd-alert-button" tag="supplier">Create Customer</button>');
         }else if(able_buttons.includes('tryagain')){
             buttons += _t('<button class="dnd-alert-button" tag="remove">Remove XML</button>') +
                 _t('<button class="dnd-alert-button" tag="tryagain">Try again</button>');
+        }else if(able_buttons.includes('invoice_not_found')){
+             buttons += _t('<button class="dnd-alert-button" tag="remove">Remove XML</button>') +
+                 _t('<button class="dnd-alert-button" tag="forcesave">Force Save</button>');
         }
         return {'errors': errors, 'buttons': buttons, 'alerttype': alerttype};
     },
     wrongMsgServer: function(data, able_buttons){
         /* Prepares the message to the server error */
-        var typemsg = {'CheckXML': _t('Error checking XML data.'), 'CreatePartner': _t('Error creating partner.'), 'CreateInvoice': _t('Error creating invoice.')};
+        var typemsg = {'CheckXML': _t('Error checking XML data.'), 'CreatePartner': _t('Error creating supplier.'), 'CreateInvoice': _t('Error creating invoice.')};
         var errors = '<div><span level="2">'+ data.error[0] +'</span> <span level="1">'+ data.error[1] +'</span>.<br>'+ typemsg[data.where] +'</div>';
         able_buttons.push('tryagain');
         return errors;
     },
     wrongMsgXml: function(file, able_buttons){
         /* Prepares the message to the xml errors */
+        var self = this;
         var errors = '';
         var map_error = {
             signed: _t('<div><span level="1">UUID</span> not found in the XML.</div>'),
@@ -316,21 +317,15 @@ var attachXmlsWizard = FieldChar.extend({
             no_xml_related_uuid: _t('<div><span level="1">The DocumentType is "E" and The XML UUID / and the node CfdiRelacionados</span> were not found in the XML.</div>'),
         };
         $.each(file, function(ikey, val){
-            if(ikey !== 'supplier' && ikey !== 'customer' && ikey !== 'xml64' && !able_buttons.includes('remove')){
+            if(ikey !== 'supplier' && ikey !== 'xml64' && ikey !== 'invoice_not_found' && !able_buttons.includes('remove')){
                 able_buttons.push('remove');
             }
             if(ikey === 'supplier'){
                 errors += _t('<div><span level="1">The XML Supplier</span> was not found: <span level="2">') + val + '</span>.</div>';
                 able_buttons.push('supplier');
-            }else if(ikey === 'customer'){
-                errors += _t('<div><span level="1">The XML Customer</span> was not found: <span level="2">') + val + '</span>.</div>';
-                able_buttons.push('customer');
             }else if(ikey === 'rfc'){
                 errors += _t('<div><span level="1">The XML Receptor RFC</span> does not match with <span level="1">your Company RFC</span>: ') +
                     _t('XML Receptor RFC: <span level="2">') + val[0] + _t(', </span> Your Company RFC: <span level="2">') + val[1] + '</span></div>';
-            }else if(ikey === 'rfc_cust'){
-                errors += _t('<div><span level="1">The XML Emitter RFC</span> does not match with <span level="1">your Company RFC</span>: ') +
-                    _t('XML Emitter RFC: <span level="2">') + val[0] + _t(', </span> Your Company RFC: <span level="2">') + val[1] + '</span></div>';
             }else if(ikey === 'currency'){
                 errors += _t('<div><span level="1">The XML Currency</span> <span level="2">') + val + _t('</span> was not found or is disabled.</div>');
             }else if(ikey === 'taxes'){
@@ -352,6 +347,13 @@ var attachXmlsWizard = FieldChar.extend({
                 errors += _t('<div><span level="1">The invoice reference</span> belong to other invoice of same partner. <span level="1">Partner: </span>') + val[0] + _t('<span level="1"> Reference: </span>') + val[1] +'</div>';
             }else if(ikey === 'invoice_not_found'){
                 errors += _t('<div><span level="1">The DocumentType is "E" and The XML UUID</span> is not related to any invoice. <span level="1">UUID: </span>') + val +'</div>';
+                $.when(self.getSession().user_has_group('l10n_mx_edi_vendor_bills.allow_force_invoice_generation')).then( function (has_group) {
+                     if (has_group) {
+                         able_buttons.push('invoice_not_found');
+                     }else{
+                         able_buttons.push('remove');
+                     }
+                });
             }else if(Object.prototype.hasOwnProperty.call(map_error, ikey)){
                 errors += map_error[ikey];
             }
