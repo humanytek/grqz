@@ -1,5 +1,5 @@
-from odoo.addons.account.tests.account_test_classes import AccountingTestCase
 import time
+from openerp.addons.account.tests.account_test_classes import AccountingTestCase  # noqa
 
 
 class TestMXCheckPrinting(AccountingTestCase):
@@ -28,7 +28,6 @@ class TestMXCheckPrinting(AccountingTestCase):
     def create_invoice(self, amount=100):
         invoice = self.invoice_model.create({
             'partner_id': self.partner_jackson.id,
-            'reference_type': 'none',
             'name': "Supplier Invoice",
             'type': "in_invoice",
             'account_id': self.account_payable.id,

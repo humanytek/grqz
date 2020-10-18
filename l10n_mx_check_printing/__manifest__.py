@@ -1,6 +1,6 @@
 {
     'name': 'MX Check Printing',
-    'version': '11.0.1.0.0',
+    'version': '12.0.1.0.0',
     'author': 'Vauxoo',
     'category': 'Localization',
     'license': 'LGPL-3',

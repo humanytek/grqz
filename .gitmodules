@@ -22,3 +22,76 @@
 	path = revenue_history_projection
 	url = git@github.com:GustavoRequiez/revenue_history_projection.git
 	branch = master
+
+[submodule "measurement_processes_production"]
+	path = measurement_processes_production
+	url = git@github.com:GustavoRequiez/measurement_processes_production.git
+	branch = master
+
+[submodule "GustavoRequiez/value_merchandise_sent"]
+	path = GustavoRequiez/value_merchandise_sent
+	url = git@github.com:GustavoRequiez/value_merchandise_sent.git
+	branch = 11.0
+
+
+[submodule "humanytek-team/onebeat_integration"]
+	path = humanytek-team/onebeat_integration
+	url = git@github.com:humanytek-team/onebeat_integration.git
+	branch = 12.0
+[submodule "product_brand"]
+	path = product_brand
+	url = git@github.com:GrupoRequiez/product_brand.git
+	branch = 12.0
+[submodule "stock_no_negative"]
+	path = stock_no_negative
+	url = git@github.com:GrupoRequiez/stock_no_negative.git
+	branch = 12.0
+[submodule "mass_editing"]
+	path = mass_editing
+	url = git@github.com:GrupoRequiez/mass_editing.git
+	branch = 12.0
+[submodule "mrp_sale_info"]
+	path = mrp_sale_info
+	url = git@github.com:GrupoRequiez/mrp_sale_info.git
+	branch = 12.0
+[submodule "stock_kardex"]
+	path = stock_kardex
+	url = git@github.com:GrupoRequiez/stock_kardex.git
+	branch = 12.0
+[submodule "stock_lot_validation"]
+	path = stock_lot_validation
+	url = git@github.com:GrupoRequiez/stock_lot_validation.git
+	branch = 12.0
+[submodule "product_supply"]
+	path = product_supply
+	url = git@github.com:GrupoRequiez/product_supply.git
+	branch = 12.0
+[submodule "sale_brand"]
+	path = sale_brand
+	url = git@github.com:GrupoRequiez/sale_brand.git
+	branch = 12.0
+[submodule "product_compromise"]
+	path = product_compromise
+	url = git@github.com:GrupoRequiez/product_compromise.git
+	branch = 12.0
+[submodule "mrp_ii"]
+	path = mrp_ii
+	url = git@github.com:GrupoRequiez/mrp_ii.git
+	branch = 12.0
+[submodule "sale_commission"]
+	path = sale_commission
+	url = git@github.com:GrupoRequiez/sale_commission.git
+	branch = 12.0
+[submodule "sale_order_observation"]
+	path = sale_order_observation
+	url = git@github.com:GrupoRequiez/sale_order_observation.git
+	branch = 12.0
+[submodule "requiez"]
+	path = requiez
+	url = git@github.com:GrupoRequiez/requiez.git
+	branch = 12.0
+
+[submodule "web_notify"]
+	path = web_notify
+	url = git@github.com:GrupoRequiez/web_notify.git
+	branch = 12.0

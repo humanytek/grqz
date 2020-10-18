@@ -17,6 +17,7 @@ class MxEdiVendorBills(TransactionCase):
         self.invoice_obj = self.env['account.invoice']
         self.attach_wizard_obj = self.env['attach.xmls.wizard']
         self.partner = self.env.ref('base.res_partner_1')
+        self.env.ref('base.res_partner_3').vat = 'XEXX010101000'
         self.product = self.env.ref('product.product_product_24')
         self.key = 'bill.xml'
         self.xml_str = misc.file_open(os.path.join(
@@ -93,6 +94,25 @@ class MxEdiVendorBills(TransactionCase):
         inv.reference = inv.reference.split('|')[0]
         res = self.attach_wizard_obj.check_xml({self.key: base64.b64encode(
             self.xml_str).decode('UTF-8')})
+        invoices = res.get('invoices', {})
+        inv_id = invoices.get(self.key, {}).get('invoice_id', False)
+        self.assertEqual(inv_id, inv.id,
+                         "Error: attachment generation")
+        self.assertTrue(inv.l10n_mx_edi_retrieve_attachments(),
+                        "Error: no attachment")
+
+    def test_003_01_attach_xml_to_invoice_without_folio(self):
+        """Attach XML on invoice without UUID and without reference"""
+        xml_str = self.xml_str.replace(b'Folio="24" Serie="INV 2017"', b'')
+        res = self.attach_wizard_obj.check_xml({self.key: base64.b64encode(
+            xml_str).decode('UTF-8')})
+        invoices = res.get('invoices', {})
+        inv_id = invoices.get(self.key, {}).get('invoice_id', False)
+        inv = self.invoice_obj.browse(inv_id)
+        inv.l10n_mx_edi_cfdi_name = False
+        inv.reference = inv.reference.split('|')[0]
+        res = self.attach_wizard_obj.check_xml({self.key: base64.b64encode(
+            xml_str).decode('UTF-8')})
         invoices = res.get('invoices', {})
         inv_id = invoices.get(self.key, {}).get('invoice_id', False)
         self.assertEqual(inv_id, inv.id,
