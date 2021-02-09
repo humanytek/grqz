@@ -95,3 +95,8 @@
 	path = web_notify
 	url = git@github.com:GrupoRequiez/web_notify.git
 	branch = 12.0
+
+[submodule "cash_flow"]
+	path = cash_flow
+	url = git@github.com:GrupoRequiez/cash_flow.git
+	branch = 12.0
